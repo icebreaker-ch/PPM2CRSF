@@ -62,7 +62,7 @@ void encodeChannels()
         uint16_t val = map(ppmValues[i], CRSF_MIN_US, CRSF_MAX_US, CRSF_MIN_VALUE, CRSF_MAX_VALUE);
         val = min(val, CRSF_MAX_VALUE);
         val = max(val, CRSF_MIN_VALUE);
-       channels[i] = 992; // val;
+       channels[i] = val;
     }
 
     // clear payload
