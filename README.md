@@ -14,6 +14,13 @@ graph LR;
 The signal for input to a JR module is inverted. To use the code for an "RX as TX" receiver, you
 probably have to change the `INVERT_SIGNAL` definition to `false` (not tested yet).
 
+| Board        | Status                | Remarks                                                       |
+| ------------ | --------------------- | ------------------------------------------------------------- |
+| ESP32        | ✅ Recommended        | 420000 Baud, internal UART Hardware inverter                  |
+| Arduino Nano | ✅ works              | 115200 Baud safe, 420000 Baud, needs external inverter        |
+| RP2040       | Probably working      | Not yet tested                                                |
+
+
 >[!Note]
 >Original code can be found here: https://github.com/tnioa/PPM2CRFS.
 >Unfortunately, this code did not work for me, so
