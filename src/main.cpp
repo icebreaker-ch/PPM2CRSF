@@ -3,6 +3,7 @@
 #define PPM_PIN 2 // Where the PPM Signal comes in
 #define NUM_PPM_CHANNELS 8
 #define NUM_CRSF_CHANNELS 16
+#define CRSF_BAUD 420000
 #define INVERT_SIGNAL true // true for output to a JR-Module, false wehen using an RX as TX
 
 volatile uint32_t lastTime = 0;
@@ -110,7 +111,7 @@ void sendCRSFFrame()
     crsfFrame[CRSF_TYPE_POS] = CRSF_TYPE;
     encodeChannels();
     crsfFrame[CRSF_CRC_POS] = crc8(&crsfFrame[CRSF_TYPE_POS], CRSF_PAYLOAD_SIZE + 1);
-    Serial1.write(crsfFrame, CRSF_FRAME_SIZE);
+    CRSF_SERIAL.write(crsfFrame, CRSF_FRAME_SIZE);
 }
 
 
@@ -121,7 +122,11 @@ void setup()
         ppmValues[i] = PPM_NEUTRAL;
     }
 
-    Serial1.begin(420000, SERIAL_8N1, RX, TX, INVERT_SIGNAL);
+    #ifdef RX
+    CRSF_SERIAL.begin(CRSF_BAUD, SERIAL_8N1, RX, TX, INVERT_SIGNAL);
+    #else
+    CRSF_SERIAL.begin(CRSF_BAUD);
+    #endif
     pinMode(PPM_PIN, INPUT);
     attachInterrupt(digitalPinToInterrupt(PPM_PIN), ppmISR, RISING);
 }
