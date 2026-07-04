@@ -23,8 +23,10 @@ const uint8_t CRSF_FRAME_SIZE = 26;
 
 const uint16_t CRSF_MIN_US = 988;
 const uint16_t CRSF_MAX_US = 2012;
+const uint16_t CRSF_DIFF_US = CRSF_MAX_US - CRSF_MIN_US;
 const uint16_t CRSF_MIN_VALUE = 172;
 const uint16_t CRSF_MAX_VALUE = 1811;
+const uint16_t CRSF_DIFF_VALUE = CRSF_MAX_VALUE - CRSF_MIN_VALUE;
 
 const uint16_t PPM_NEUTRAL = 1500;
 
@@ -58,11 +60,9 @@ void encodeChannels()
 {
   uint16_t channels[NUM_CRSF_CHANNELS];
   for (int i = 0; i < NUM_CRSF_CHANNELS; i++) {
-      uint16_t val = map(ppmValues[i], CRSF_MIN_US, CRSF_MAX_US,CRSF_MIN_VALUE, CRSF_MAX_VALUE);
+      uint16_t val = CRSF_MIN_VALUE + (ppmValues[i] - CRSF_MIN_US) * CRSF_DIFF_VALUE / CRSF_DIFF_US;
       val = min(val, CRSF_MAX_VALUE);
       val = max(val, CRSF_MIN_VALUE);
-      Serial.print(val);
-      Serial.print(" ");
       channels[i] = val;
   }
 
