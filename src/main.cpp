@@ -17,7 +17,7 @@ const uint8_t CRSF_CRC_POS = 25;
 const uint8_t CRSF_PAYLOAD_SIZE = 22;
 const uint8_t CRSF_FRAME_SIZE = CRSF_PAYLOAD_SIZE + 4;
 
-const uint8_t CRSF_SYNC = 0xEE; // EdgeTX: 0xEE CRSF: 0xC8
+const uint8_t CRSF_SYNC = 0xC8; // EdgeTX: 0xEE CRSF: 0xC8
 const uint8_t CRSF_LEN = CRSF_PAYLOAD_SIZE + 2;
 const uint8_t CRSF_TYPE = 0x16; // CRSF Frametype RC channels packed
 
@@ -29,12 +29,13 @@ const uint16_t CRSF_NEUTRAL = 992;
 const uint16_t CRSF_REFRESH_RATE = 10; // ms
 
 const uint16_t PPM_SYNC = 3000; // us
+const uint16_t PPM_TIMEOUT = 100; // ms
 const uint16_t PPM_NEUTRAL = 1500;
 
 static uint8_t crsfFrame[CRSF_FRAME_SIZE];
+static long lastPPMPulse = 0;
 
 void ppmISR() {
-    static long lastPPMPulse = 0;
     static int currentChannel = 0;
 
     uint32_t now = micros();
@@ -121,8 +122,9 @@ void setup() {
 void loop() {
     static long lastSend = 0;
     long now = millis();
-    if (now - lastSend > CRSF_REFRESH_RATE) {
+    long ppmAge = now - lastPPMPulse / 1000;
+    if ((ppmAge < PPM_TIMEOUT) && (now - lastSend > CRSF_REFRESH_RATE)) {
         lastSend = now;
         sendCRSFFrame();
-    }
+    } // else timeout => send nothing leads to failsafe
 }
