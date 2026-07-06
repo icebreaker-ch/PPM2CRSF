@@ -3,7 +3,6 @@
 #define PPM_PIN 2 // Where the PPM Signal comes in
 #define NUM_PPM_CHANNELS 8
 #define NUM_CRSF_CHANNELS 16
-#define CRSF_BAUD 420000
 #define INVERT_SIGNAL true // true for output to a JR-Module, false wehen using an RX as TX
 
 volatile uint16_t ppmValues[NUM_PPM_CHANNELS];
@@ -27,16 +26,17 @@ const uint16_t CRSF_MIN_VALUE = 172;
 const uint16_t CRSF_MAX_VALUE = 1811;
 const uint16_t CRSF_NEUTRAL = 992;
 const uint16_t CRSF_REFRESH_RATE = 10; // ms
+const uint16_t BLINK_RATE = 200; //ms
 
 const uint16_t PPM_SYNC = 3000; // us
-const uint16_t PPM_TIMEOUT = 100; // ms
+const uint16_t PPM_TIMEOUT = 500; // ms
 const uint16_t PPM_NEUTRAL = 1500;
 
 static uint8_t crsfFrame[CRSF_FRAME_SIZE];
 static long lastPPMPulse = 0;
 
 void ppmISR() {
-    static int currentChannel = 0;
+    static uint8_t currentChannel = 0;
 
     uint32_t now = micros();
     uint32_t duration = now - lastPPMPulse;
@@ -106,25 +106,34 @@ void sendCRSFFrame() {
 }
 
 void setup() {
+    pinMode(LED_PORT, OUTPUT);
     for (int i = 0; i < NUM_PPM_CHANNELS; ++i) {
         ppmValues[i] = PPM_NEUTRAL;
     }
 
 #ifdef ESP32
-    CRSF_SERIAL.begin(CRSF_BAUD, SERIAL_8N1, RX, TX, INVERT_SIGNAL);
+    CRSF_SERIAL.begin(CRSF_BAUD_RATE, SERIAL_8N1, RX, TX, INVERT_SIGNAL);
 #else
-    CRSF_SERIAL.begin(CRSF_BAUD);
+    CRSF_SERIAL.begin(CRSF_BAUD_RATE);
 #endif
     pinMode(PPM_PIN, INPUT);
     attachInterrupt(digitalPinToInterrupt(PPM_PIN), ppmISR, RISING);
 }
 
 void loop() {
-    static long lastSend = 0;
-    long now = millis();
-    long ppmAge = now - lastPPMPulse / 1000;
+    static uint32_t lastSend = 0;
+    static uint32_t lastBlink = 0;
+    static bool blinkState = false;
+
+    uint32_t now = millis();
+    uint32_t ppmAge = now - lastPPMPulse / 1000;
     if ((ppmAge < PPM_TIMEOUT) && (now - lastSend > CRSF_REFRESH_RATE)) {
         lastSend = now;
         sendCRSFFrame();
+        if (now - lastBlink > BLINK_RATE) {
+            lastBlink = now;
+            digitalWrite(LED_PORT, blinkState ? HIGH : LOW);
+            blinkState = !blinkState;
+        }
     } // else timeout => send nothing leads to failsafe
 }
