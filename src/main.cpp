@@ -3,7 +3,7 @@
 #define PPM_PIN 2 // Where the PPM Signal comes in
 #define NUM_PPM_CHANNELS 8
 #define NUM_CRSF_CHANNELS 16
-#define INVERT_SIGNAL true // true for output to a JR-Module, false wehen using an RX as TX
+#define INVERT_SIGNAL false // true for output to a JR-Module (ESP32 boards only), false when using an RX as TX
 
 volatile uint16_t ppmValues[NUM_PPM_CHANNELS];
 
@@ -33,7 +33,7 @@ const uint16_t PPM_TIMEOUT = 500; // ms
 const uint16_t PPM_NEUTRAL = 1500;
 
 static uint8_t crsfFrame[CRSF_FRAME_SIZE];
-static long lastPPMPulse = 0;
+static volatile long lastPPMPulse = 0;
 
 void ppmISR() {
     static uint8_t currentChannel = 0;
@@ -112,8 +112,11 @@ void setup() {
     }
 
 #ifdef ESP32
-    CRSF_SERIAL.begin(CRSF_BAUD_RATE, SERIAL_8N1, RX, TX, INVERT_SIGNAL);
+    CRSF_SERIAL.begin(CRSF_BAUD_RATE, SERIAL_8N1, CRSF_RX_PIN, CRSF_TX_PIN, INVERT_SIGNAL);
 #else
+    #if INVERT_SIGNAL
+        #error "INVERT_SIGNAL=true Not supported on that board."
+    #endif
     CRSF_SERIAL.begin(CRSF_BAUD_RATE);
 #endif
     pinMode(PPM_PIN, INPUT);
@@ -126,7 +129,10 @@ void loop() {
     static bool blinkState = false;
 
     uint32_t now = millis();
-    uint32_t ppmAge = now - lastPPMPulse / 1000;
+    noInterrupts();
+    uint32_t lastPPMMillis = lastPPMPulse / 1000;
+    interrupts();
+    uint32_t ppmAge = now - lastPPMMillis;
     if ((ppmAge < PPM_TIMEOUT) && (now - lastSend > CRSF_REFRESH_RATE)) {
         lastSend = now;
         sendCRSFFrame();
