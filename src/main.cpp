@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "BitWriter.h"
 
 #define PPM_PIN 2 // Where the PPM Signal comes in
 #define NUM_PPM_CHANNELS 8
@@ -12,6 +13,7 @@ const uint8_t CRSF_LEN_POS = 1;
 const uint8_t CRSF_TYPE_POS = 2;
 const uint8_t CRSF_PAYLOAD_POS = 3;
 const uint8_t CRSF_CRC_POS = 25;
+const uint8_t CRSF_BITS_PER_CHANNEL = 11;
 
 const uint8_t CRSF_PAYLOAD_SIZE = 22;
 const uint8_t CRSF_FRAME_SIZE = CRSF_PAYLOAD_SIZE + 4;
@@ -26,9 +28,9 @@ const uint16_t CRSF_MIN_VALUE = 172;
 const uint16_t CRSF_MAX_VALUE = 1811;
 const uint16_t CRSF_NEUTRAL = 992;
 const uint16_t CRSF_REFRESH_RATE = 10; // ms
-const uint16_t BLINK_RATE = 200; //ms
+const uint16_t BLINK_RATE = 200;       // ms
 
-const uint16_t PPM_SYNC = 3000; // us
+const uint16_t PPM_SYNC = 3000;   // us
 const uint16_t PPM_TIMEOUT = 500; // ms
 const uint16_t PPM_NEUTRAL = 1500;
 
@@ -60,25 +62,12 @@ void encodeChannels() {
             val = map(ppmValues[i], CRSF_MIN_US, CRSF_MAX_US, CRSF_MIN_VALUE, CRSF_MAX_VALUE);
         else
             val = CRSF_NEUTRAL;
-        channels[i] = max(min(val, CRSF_MAX_VALUE), CRSF_MIN_VALUE); // limit crsf min..crsf max
+        channels[i] = max(min(val, CRSF_MAX_VALUE), CRSF_MIN_VALUE);
     }
 
-    // clear payload
-    memset(&crsfFrame[CRSF_PAYLOAD_POS], 0, CRSF_PAYLOAD_SIZE);
-
-    int bitOffset = 0;
+    BitWriter writer(&crsfFrame[CRSF_PAYLOAD_POS], CRSF_PAYLOAD_SIZE);
     for (int i = 0; i < NUM_CRSF_CHANNELS; i++) {
-        uint16_t chan = channels[i] & 0x07FF; // 11 bits
-        int byteIndex = bitOffset / 8;
-        int bitIndex = bitOffset % 8;
-
-        crsfFrame[CRSF_PAYLOAD_POS + byteIndex] |= (chan << bitIndex) & 0xFF;
-        crsfFrame[CRSF_PAYLOAD_POS + byteIndex + 1] |= (chan >> (8 - bitIndex)) & 0xFF;
-
-        if (bitIndex > 5) {
-            crsfFrame[CRSF_PAYLOAD_POS + byteIndex + 2] |= (chan >> (16 - bitIndex)) & 0xFF;
-        }
-        bitOffset += 11;
+        writer.writeBits(channels[i], CRSF_BITS_PER_CHANNEL);
     }
 }
 

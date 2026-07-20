@@ -14,11 +14,11 @@ graph LR;
 The signal for input to a JR module is inverted. To use the code for an "RX as TX" receiver, you
 have to change the `INVERT_SIGNAL` definition to `false`.
 
-| Board        | Status                | Remarks                                                       |
-| ------------ | --------------------- | ------------------------------------------------------------- |
-| ESP32        | ✅ Recommended        | 420000 Baud, internal UART Hardware inverter                  |
-| Arduino Nano | ✅ works              | 115200 Baud safe, 420000 Baud, needs external inverter        |
-| RP2040       | Probably working      | Not yet tested                                                |
+| Board        | Status                | Remarks                                                              |
+| ------------ | --------------------- | -------------------------------------------------------------------- |
+| ESP32        | ✅ Recommended        | 420000 Baud, internal UART Hardware inverter                         |
+| Arduino Nano | ✅ works              | 115200 Baud safe, 420000 Baud, needs external inverter for JR Module |
+| RP2040       | Probably working      | Not yet tested                                                       |
 
 ## Schematic diagrams
 
@@ -31,11 +31,3 @@ PDF: [SBUS2CRSF.pdf](https://github.com/user-attachments/files/30149794/SBUS2CRS
 | <img width="998" height="414" alt="scheme2" src="https://github.com/user-attachments/assets/2485108b-2174-480f-9eb8-cb95364c3208" /> |
 | :--: |
 | Using a JR Module |
-
-
-
-
->[!Note]
->Original code can be found here: https://github.com/tnioa/PPM2CRFS.
->Unfortunately, this code did not work for me, so
->I did some bugfixing and (hopefully) enhanced readability.
