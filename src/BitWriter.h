@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 #ifndef BIT_WRITER_H
-    #define BIT_WRITER_H
+#define BIT_WRITER_H
 
 class BitWriter {
     private:
