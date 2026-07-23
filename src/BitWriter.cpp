@@ -5,7 +5,7 @@ BitWriter::BitWriter(uint8_t *buf, uint8_t bufSize) : buffer(buf), size(bufSize)
 }
 
 void BitWriter::writeBits(uint32_t value, uint8_t numBits) {
-    value &= (1UL << numBits) - 1; // auf numBits maskieren
+    value &= (1UL << numBits) - 1; // Mask numBits
 
     while (numBits > 0) {
         uint8_t byteIndex = bitPos / 8;
